@@ -1,0 +1,30 @@
+---
+- name: Install LAMP stack
+  hosts: slave
+  become: yes
+  tasks:
+    - name: Copy bash script to Slave node
+      copy:
+        src: /home/vagrant/ansible/Myscript.sh
+        dest: /home/vagrant/Myscript.sh
+        mode: 0755
+
+    - name: Execute bash script to setup LAMP stack
+      command: /home/vagrant/Myscript.sh
+
+    - name: Create cron job
+      cron:
+        name: "uptime check"
+        minute: "0"
+        hour: "0"
+        job: "/usr/bin/uptime >> /home/vagrant/uptime.log"
+        state: present
+
+    - name: Verify PHP application accessibility
+      shell: "curl http://192.168.33.12/var/www/laravel"
+      register: result
+      ignore_errors: yes
+
+    - name: Show output debug
+      debug:
+        var: result.stdout
